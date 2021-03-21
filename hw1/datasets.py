@@ -23,14 +23,18 @@ class RandomImageDataset(Dataset):
         self.image_dim = (C, W, H)
 
     def __getitem__(self, index):
-
         # TODO: Create a random image tensor and return it.
         # Bonus if you make sure to always return the same image for the
         # same index (make it deterministic per index), but don't mess-up
         # RNG state outside this method.
 
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        initial_seed = torch.initial_seed()
+        torch.manual_seed(index)
+        tensor = torch.randint(low=0, high=256, size=self.image_dim)
+        torch.manual_seed(initial_seed)
+        return tensor
+
         # ========================
 
     def __len__(self):
@@ -43,6 +47,7 @@ class SubsetDataset(Dataset):
     """
     A dataset that wraps another dataset, returning a subset from it.
     """
+
     def __init__(self, source_dataset: Dataset, subset_len, offset=0):
         """
         Create a SubsetDataset from another dataset.
@@ -69,4 +74,3 @@ class SubsetDataset(Dataset):
         # ====== YOUR CODE: ======
         raise NotImplementedError()
         # ========================
-
