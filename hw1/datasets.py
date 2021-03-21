@@ -1,5 +1,4 @@
 import numpy as np
-
 import torch
 from torch.utils.data import Dataset
 
@@ -32,7 +31,7 @@ class RandomImageDataset(Dataset):
         initial_seed = torch.initial_seed()
         torch.manual_seed(index)
         tensor = torch.randint(low=0, high=256, size=self.image_dim)
-        cls = torch.randint(low=0, high=self.num_class, size=(1,))
+        cls = torch.randint(low=0, high=self.num_classes, size=(1,))
         torch.manual_seed(initial_seed)
         return tensor, cls
 
@@ -40,7 +39,7 @@ class RandomImageDataset(Dataset):
 
     def __len__(self):
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        raise self.num_samples
         # ========================
 
 
