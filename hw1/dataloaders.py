@@ -5,6 +5,8 @@ import torch
 import torch.utils.data.sampler as sampler
 from torch.utils.data import Dataset, DataLoader
 
+from hw1 import datasets
+
 
 def create_train_validation_loaders(dataset: Dataset, validation_ratio,
                                     batch_size=100, num_workers=2):
@@ -31,7 +33,8 @@ def create_train_validation_loaders(dataset: Dataset, validation_ratio,
     # ====== YOUR CODE: ======
     val_len = int(validation_ratio * len(dataset))
     train_len = len(dataset) - val_len
-    train_set ,val_set = torch.utils.data.random_split(dataset,[train_len,val_len])
+    train_set = datasets.SubsetDataset(dataset,train_len,0)
+    val_set = datasets.SubsetDataset(dataset,val_len,train_len)
     dl_train = DataLoader(train_set,batch_size,True,num_workers=num_workers)
     dl_valid = DataLoader(val_set,batch_size,True,num_workers=num_workers)
     # ========================
