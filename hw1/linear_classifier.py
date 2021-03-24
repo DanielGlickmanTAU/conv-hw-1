@@ -69,7 +69,10 @@ class LinearClassifier(object):
 
         acc = None
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        # todo option 1
+        acc = (y == y_pred).mean()
+        # option 2
+        acc = sum(y[y == y_pred]) / len(y)
         # ========================
 
         return acc * 100
