@@ -20,7 +20,7 @@ def create_train_validation_loaders(dataset: Dataset, validation_ratio,
     :param num_workers: Number of workers to pass to dataloader init.
     :return: A tuple of train and validation DataLoader instances.
     """
-    if not(0.0 < validation_ratio < 1.0):
+    if not (0.0 < validation_ratio < 1.0):
         raise ValueError(validation_ratio)
 
     # TODO: Create two DataLoader instances, dl_train and dl_valid.
@@ -33,11 +33,12 @@ def create_train_validation_loaders(dataset: Dataset, validation_ratio,
     # ====== YOUR CODE: ======
     val_len = int(validation_ratio * len(dataset))
     train_len = len(dataset) - val_len
-    train_set = datasets.SubsetDataset(dataset,train_len,0)
-    val_set = datasets.SubsetDataset(dataset,val_len,train_len)
-    dl_train = DataLoader(train_set,batch_size,True,num_workers=num_workers)
-    dl_valid = DataLoader(val_set,batch_size,True,num_workers=num_workers)
+    indicies = list(range(len(dataset)))
+
+    train_samples = sampler.SubsetRandomSampler(indices=indicies[:train_len])
+    valid_samples = sampler.SubsetRandomSampler(indices=indicies[train_len:])
+    dl_train = DataLoader(dataset, sampler=train_samples, batch_size=batch_size, num_workers=num_workers)
+    dl_valid = DataLoader(dataset, sampler=valid_samples, batch_size=batch_size, num_workers=num_workers)
     # ========================
 
     return dl_train, dl_valid
-
