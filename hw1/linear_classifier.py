@@ -23,7 +23,8 @@ class LinearClassifier(object):
 
         self.weights = None
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        # possible should be n_features +1 here
+        self.weights = torch.normal(mean=0., std=weight_std, size=(n_features, n_classes))
         # ========================
 
     def predict(self, x: Tensor):
@@ -76,14 +77,12 @@ class LinearClassifier(object):
               dl_valid: DataLoader,
               loss_fn: ClassifierLoss,
               learn_rate=0.1, weight_decay=0.001, max_epochs=100):
-
         Result = namedtuple('Result', 'accuracy loss')
         train_res = Result(accuracy=[], loss=[])
         valid_res = Result(accuracy=[], loss=[])
 
         print('Training', end='')
         for epoch_idx in range(max_epochs):
-
             # TODO: Implement model training loop.
             # At each epoch, evaluate the model on the entire training set
             # (batch by batch) and update the weights.
