@@ -23,7 +23,7 @@ class LinearClassifier(object):
 
         self.weights = None
         # ====== YOUR CODE: ======
-        # possible should be n_features +1 here
+        # todo possible should be n_features +1 here
         self.weights = torch.normal(mean=0., std=weight_std, size=(n_features, n_classes))
         # ========================
 
@@ -45,7 +45,9 @@ class LinearClassifier(object):
 
         y_pred, class_scores = None, None
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        class_scores: Tensor = x * self.weights
+        # todo possible dim is wrong here
+        y_pred = torch.argmax(class_scores, dim=0)
         # ========================
 
         return y_pred, class_scores
