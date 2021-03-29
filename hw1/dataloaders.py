@@ -34,7 +34,6 @@ def create_train_validation_loaders(dataset: Dataset, validation_ratio,
     val_len = int(validation_ratio * len(dataset))
     train_len = len(dataset) - val_len
     indicies = list(range(len(dataset)))
-
     train_samples = sampler.SubsetRandomSampler(indices=indicies[:train_len])
     valid_samples = sampler.SubsetRandomSampler(indices=indicies[train_len:])
     dl_train = DataLoader(dataset, sampler=train_samples, batch_size=batch_size, num_workers=num_workers)
