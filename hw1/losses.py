@@ -55,6 +55,15 @@ class SVMHingeLoss(ClassifierLoss):
 
         loss = None
         # ====== YOUR CODE: ======
+        s_Y_i = scores_for_y_golds = x_scores[y]  # shape (N,1)
+        # should substract first element in s_Y_i from all elements in first row in x_scores etc.
+        M = x_scores - s_Y_i
+        # zero out loss for correct
+        M[:y] = 0.
+        M = M + self.delta
+        M = max(M, torch.zeros_like(M)) # element wise
+        M.mean() #something like that
+
         raise NotImplementedError()
         # ========================
 
@@ -66,7 +75,6 @@ class SVMHingeLoss(ClassifierLoss):
         return loss
 
     def grad(self):
-
         # TODO: Implement SVM loss gradient calculation
         # Same notes as above. Hint: Use the matrix M from above, based on
         # it create a matrix G such that X^T * G is the gradient.

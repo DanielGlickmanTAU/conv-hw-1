@@ -45,9 +45,13 @@ class LinearClassifier(object):
 
         y_pred, class_scores = None, None
         # ====== YOUR CODE: ======
-        class_scores: Tensor = x * self.weights
+        N = x.shape[0]
+        class_scores = torch.matmul(x, self.weights)
+        assert class_scores.shape[0] == N, str(class_scores.shape[0]) + ' not equal ' + str(N)
+        assert class_scores.shape[1] == self.n_classes, ''
         # todo possible dim is wrong here
-        y_pred = torch.argmax(class_scores, dim=0)
+        y_pred = torch.argmax(class_scores, dim=1)
+        # assert
         # ========================
 
         return y_pred, class_scores
@@ -69,10 +73,7 @@ class LinearClassifier(object):
 
         acc = None
         # ====== YOUR CODE: ======
-        # todo option 1
-        acc = (y == y_pred).mean()
-        # option 2
-        acc = sum(y[y == y_pred]) / len(y)
+        acc = sum(y == y_pred) / len(y)
         # ========================
 
         return acc * 100
