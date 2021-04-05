@@ -55,21 +55,19 @@ class SVMHingeLoss(ClassifierLoss):
 
         loss = None
         # ====== YOUR CODE: ======
-        s_Y_i = scores_for_y_golds = x_scores[y]  # shape (N,1)
-        # should substract first element in s_Y_i from all elements in first row in x_scores etc.
-        M = x_scores - s_Y_i
-        # zero out loss for correct
-        M[:y] = 0.
-        M = M + self.delta
-        M = max(M, torch.zeros_like(M)) # element wise
-        M.mean() #something like that
-
-        raise NotImplementedError()
+        N = y.shape[0]
+        row_index = torch.arange(N)
+        s_y_i = x_scores[row_index, y]
+        s_y_i_as_matrix = s_y_i.unsqueeze(1)
+        M = self.delta + x_scores - s_y_i_as_matrix
+        M[row_index, y] = 0
+        hinge_loss = torch.max(M, torch.zeros_like(M)).sum(dim=1)
+        loss = hinge_loss.mean()
         # ========================
 
         # TODO: Save what you need for gradient calculation in self.grad_ctx
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        # raise NotImplementedError()
         # ========================
 
         return loss
