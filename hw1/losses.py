@@ -126,7 +126,7 @@ ds_train = hw1datasets.SubsetDataset(
 
 # Create training & validation sets
 dl_train, dl_valid = hw1dataloaders.create_train_validation_loaders(
-    ds_train, validation_ratio=0.2, batch_size=batch_size
+    ds_train, validation_ratio=0.2, batch_size=batch_size, num_workers=0
 )
 
 import helpers.dataloader_utils as dl_utils
@@ -135,12 +135,12 @@ import helpers.dataloader_utils as dl_utils
 ds_test = hw1datasets.SubsetDataset(
     torchvision.datasets.MNIST(root='../data/mnist/', download=False, train=False, transform=tf_ds),
     num_test)
-dl_test = torch.utils.data.DataLoader(ds_test, batch_size)
+dl_test = torch.utils.data.DataLoader(ds_test, batch_size, num_workers=0)
 
 x0, y0 = ds_train[0]
 n_features = torch.numel(x0)
 n_classes = 10
-dl_test = torch.utils.data.DataLoader(ds_test, batch_size)
+dl_test = torch.utils.data.DataLoader(ds_test, batch_size, num_workers=0)
 x, y = dl_utils.flatten(dl_test)
 import hw1.linear_classifier as hw1linear
 
@@ -158,4 +158,38 @@ expected_grad = torch.load('../tests/assets/part3_expected_grad.pt')
 print(expected_grad)
 diff = torch.norm(grad - expected_grad)
 print('diff =', diff.item())
-unittest.TestCase().assertAlmostEqual(diff, 0, delta=1e-1)
+test = unittest.TestCase()
+test.assertAlmostEqual(diff, 0, delta=1e-1)
+
+lin_cls = hw1linear.LinearClassifier(n_features, n_classes)
+
+# Evaluate on the test set
+x_test, y_test = dl_utils.flatten(dl_test)
+y_test_pred, _ = lin_cls.predict(x_test)
+test_acc_before = lin_cls.evaluate_accuracy(y_test, y_test_pred)
+
+# Train the model
+svm_loss_fn = SVMHingeLoss()
+train_res, valid_res = lin_cls.train(dl_train, dl_valid, svm_loss_fn,
+                                     learn_rate=1e-3, weight_decay=0.5,
+                                     max_epochs=31)
+
+# Re-evaluate on the test set
+y_test_pred, _ = lin_cls.predict(x_test)
+test_acc_after = lin_cls.evaluate_accuracy(y_test, y_test_pred)
+import matplotlib.pyplot as plt
+
+# Plot loss and accuracy
+fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(10, 5))
+for i, loss_acc in enumerate(('loss', 'accuracy')):
+    axes[i].plot(getattr(train_res, loss_acc))
+    axes[i].plot(getattr(valid_res, loss_acc))
+    axes[i].set_title(loss_acc.capitalize(), fontweight='bold')
+    axes[i].set_xlabel('Epoch')
+    axes[i].legend(('train', 'valid'))
+    axes[i].grid(which='both', axis='y')
+
+# Check test set accuracy
+print(f'Test-set accuracy before training: {test_acc_before:.1f}%')
+print(f'Test-set accuracy after training: {test_acc_after:.1f}%')
+test.assertGreaterEqual(test_acc_after, 80.0)

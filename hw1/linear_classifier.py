@@ -3,7 +3,8 @@ from torch import Tensor
 from torch.utils.data import DataLoader
 from collections import namedtuple
 
-from .losses import ClassifierLoss
+
+# from .losses import ClassifierLoss
 
 
 class LinearClassifier(object):
@@ -49,7 +50,7 @@ class LinearClassifier(object):
         class_scores = torch.matmul(x, self.weights)
         assert class_scores.shape[0] == N, str(class_scores.shape[0]) + ' not equal ' + str(N)
         assert class_scores.shape[1] == self.n_classes, ''
-        # todo possible dim is wrong here
+
         y_pred = torch.argmax(class_scores, dim=1)
         # assert
         # ========================
@@ -81,7 +82,7 @@ class LinearClassifier(object):
     def train(self,
               dl_train: DataLoader,
               dl_valid: DataLoader,
-              loss_fn: ClassifierLoss,
+              loss_fn,
               learn_rate=0.1, weight_decay=0.001, max_epochs=100):
         Result = namedtuple('Result', 'accuracy loss')
         train_res = Result(accuracy=[], loss=[])
@@ -104,12 +105,33 @@ class LinearClassifier(object):
             average_loss = 0
 
             # ====== YOUR CODE: ======
-            raise NotImplementedError()
+            self.run_batches(dl_train, learn_rate, loss_fn, train_res, do_train=True)
+            self.run_batches(dl_valid, learn_rate, loss_fn, valid_res, do_train=False)
+
             # ========================
             print('.', end='')
 
         print('')
         return train_res, valid_res
+
+    def run_batches(self, dataloader, learn_rate, loss_fn, result, do_train):
+        losses = []
+        accs = []
+        for x_batch, y_batch in dataloader:
+            y_hat, class_scores = self.predict(x_batch)
+            acc = self.evaluate_accuracy(y_batch, y_hat)
+            accs.append(acc)
+            loss = loss_fn.loss(x_batch, y_batch, class_scores, y_hat)
+            loss = loss.item()
+            losses.append(loss)
+            if do_train:
+                grad = loss_fn.grad()
+                self.weights = self.weights - learn_rate * grad
+            # print(batch)
+            # todo implement accurarcy on train
+            # todo implement decay
+        result.accuracy.append((sum(accs) / len(accs)))
+        result.loss.append(sum(losses) / len(losses))
 
     def weights_as_images(self, img_shape, has_bias=True):
         """
