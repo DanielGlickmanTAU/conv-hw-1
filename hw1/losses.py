@@ -69,7 +69,7 @@ class SVMHingeLoss(ClassifierLoss):
         # ========================
 
         # TODO: Save what you need for gradient calculation in self.grad_ctx
-        self.grad_ctx = (M, x)
+        self.grad_ctx = (M, x,y)
         # raise NotImplementedError()
         # ========================
 
@@ -85,13 +85,13 @@ class SVMHingeLoss(ClassifierLoss):
         # x shape is (N,D)
         # M shape (N,C)
         # y shape N
-        M, x = self.grad_ctx
+        M, x,y = self.grad_ctx
         N, C = M.shape
-        rows = torch.arange(N)
-        G = torch.ones_like(M)
+        rows_index = torch.arange(N)
 
+        G = torch.ones_like(M)
         G[M <= 0] = 0
-        G[rows, y] = - G.sum(dim=1)
+        G[rows_index, y] = - G.sum(dim=1)
         grad = torch.matmul(x.T, G) / N
 
         # ========================
@@ -188,6 +188,7 @@ for i, loss_acc in enumerate(('loss', 'accuracy')):
     axes[i].set_xlabel('Epoch')
     axes[i].legend(('train', 'valid'))
     axes[i].grid(which='both', axis='y')
+plt.show()
 
 # Check test set accuracy
 print(f'Test-set accuracy before training: {test_acc_before:.1f}%')

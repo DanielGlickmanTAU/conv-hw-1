@@ -105,31 +105,30 @@ class LinearClassifier(object):
             average_loss = 0
 
             # ====== YOUR CODE: ======
-            self.run_batches(dl_train, learn_rate, loss_fn, train_res, do_train=True)
-            self.run_batches(dl_valid, learn_rate, loss_fn, valid_res, do_train=False)
-
+            self.run_batches(dl_train, learn_rate, loss_fn, train_res, True, weight_decay)
+            self.run_batches(dl_valid, learn_rate, loss_fn, valid_res, False, weight_decay)
+            total_samples = 0
+            total_loss = 0
             # ========================
             print('.', end='')
 
         print('')
         return train_res, valid_res
 
-    def run_batches(self, dataloader, learn_rate, loss_fn, result, do_train):
+    def run_batches(self, dataloader, learn_rate, loss_fn, result, do_train, decay):
         losses = []
         accs = []
         for x_batch, y_batch in dataloader:
             y_hat, class_scores = self.predict(x_batch)
             acc = self.evaluate_accuracy(y_batch, y_hat)
             accs.append(acc)
-            loss = loss_fn.loss(x_batch, y_batch, class_scores, y_hat)
+            loss = loss_fn.loss(x_batch, y_batch, class_scores, y_hat) + (decay / 2) * (self.weights.norm() ** 2)
             loss = loss.item()
             losses.append(loss)
             if do_train:
-                grad = loss_fn.grad()
+                grad = loss_fn.grad() + decay * self.weights
                 self.weights = self.weights - learn_rate * grad
             # print(batch)
-            # todo implement accurarcy on train
-            # todo implement decay
         result.accuracy.append((sum(accs) / len(accs)))
         result.loss.append(sum(losses) / len(losses))
 
