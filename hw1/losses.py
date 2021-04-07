@@ -1,5 +1,8 @@
 import abc
+import unittest
+
 import torch
+import torchvision
 
 
 class ClassifierLoss(abc.ABC):
@@ -66,7 +69,7 @@ class SVMHingeLoss(ClassifierLoss):
         # ========================
 
         # TODO: Save what you need for gradient calculation in self.grad_ctx
-        # ====== YOUR CODE: ======
+        self.grad_ctx = (M, x)
         # raise NotImplementedError()
         # ========================
 
@@ -79,7 +82,80 @@ class SVMHingeLoss(ClassifierLoss):
 
         grad = None
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        # x shape is (N,D)
+        # M shape (N,C)
+        # y shape N
+        M, x = self.grad_ctx
+        N, C = M.shape
+        rows = torch.arange(N)
+        G = torch.ones_like(M)
+
+        G[M <= 0] = 0
+        G[rows, y] = - G.sum(dim=1)
+        grad = torch.matmul(x.T, G) / N
+
         # ========================
 
         return grad
+
+
+import torchvision.transforms as tvtf
+import hw1.datasets as hw1datasets
+import hw1.dataloaders as hw1dataloaders
+import hw1.transforms as hw1tf
+
+tf_ds = tvtf.Compose([
+    tvtf.ToTensor(),  # Convert PIL image to pytorch Tensor
+    tvtf.Normalize(
+        # Normalize each chanel with precomputed mean and std of the train set
+        mean=(0.49139968,),
+        std=(0.24703223,)),
+    hw1tf.TensorView(-1),  # Reshape to 1D Tensor
+    hw1tf.BiasTrick(),  # Apply the bias trick (add bias dimension to data)
+])
+
+# Define how much data to load
+num_train = 10000
+num_test = 1000
+batch_size = 1000
+
+# Training dataset
+ds_train = hw1datasets.SubsetDataset(
+    torchvision.datasets.MNIST(root='./data/mnist/', download=True, train=True, transform=tf_ds),
+    num_train)
+
+# Create training & validation sets
+dl_train, dl_valid = hw1dataloaders.create_train_validation_loaders(
+    ds_train, validation_ratio=0.2, batch_size=batch_size
+)
+
+import helpers.dataloader_utils as dl_utils
+
+# Test dataset & loader
+ds_test = hw1datasets.SubsetDataset(
+    torchvision.datasets.MNIST(root='../data/mnist/', download=False, train=False, transform=tf_ds),
+    num_test)
+dl_test = torch.utils.data.DataLoader(ds_test, batch_size)
+
+x0, y0 = ds_train[0]
+n_features = torch.numel(x0)
+n_classes = 10
+dl_test = torch.utils.data.DataLoader(ds_test, batch_size)
+x, y = dl_utils.flatten(dl_test)
+import hw1.linear_classifier as hw1linear
+
+lin_cls = hw1linear.LinearClassifier(n_features, n_classes)
+y_pred, x_scores = lin_cls.predict(x)
+
+loss_fn = SVMHingeLoss(delta=1)
+
+# Compute loss and gradient
+loss = loss_fn(x, y, x_scores, y_pred)
+grad = loss_fn.grad()
+
+# Test the gradient with a pre-computed expected value
+expected_grad = torch.load('../tests/assets/part3_expected_grad.pt')
+print(expected_grad)
+diff = torch.norm(grad - expected_grad)
+print('diff =', diff.item())
+unittest.TestCase().assertAlmostEqual(diff, 0, delta=1e-1)
