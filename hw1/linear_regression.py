@@ -30,7 +30,7 @@ class LinearRegressor(BaseEstimator, RegressorMixin):
 
         y_pred = None
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        y_pred = X @ self.weights_
         # ========================
 
         return y_pred
@@ -48,7 +48,8 @@ class LinearRegressor(BaseEstimator, RegressorMixin):
 
         w_opt = None
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        d = X.shape[1]
+        w_opt = np.linalg.inv(X.T @ X + self.reg_lambda * np.identity(d)) @ X.T @ y
         # ========================
 
         self.weights_ = w_opt
@@ -74,7 +75,11 @@ class BiasTrickTransformer(BaseEstimator, TransformerMixin):
 
         xb = None
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        if len(X.shape) == 1:
+            xb = np.c_[np.ones(1), X]
+        else:
+            N = X.shape[0]
+            xb = np.c_[np.ones(N), X]
         # ========================
 
         return xb
@@ -84,13 +89,14 @@ class BostonFeaturesTransformer(BaseEstimator, TransformerMixin):
     """
     Generates custom features for the Boston dataset.
     """
+
     def __init__(self, degree=2):
         self.degree = degree
 
         # TODO: Your custom initialization, if needed
         # Add any hyperparameters you need and save them as above
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+
         # ========================
 
     def fit(self, X, y=None):
@@ -112,7 +118,8 @@ class BostonFeaturesTransformer(BaseEstimator, TransformerMixin):
 
         X_transformed = None
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        feature_model = PolynomialFeatures(degree=self.degree)
+        X_transformed = feature_model.fit_transform(X)
         # ========================
 
         return X_transformed
@@ -136,7 +143,11 @@ def top_correlated_features(df: DataFrame, target_feature, n=5):
     # TODO: Calculate correlations with target and sort features by it
 
     # ====== YOUR CODE: ======
-    raise NotImplementedError()
+    target_index = df.columns.get_loc(target_feature)
+    correlations = np.abs(np.corrcoef(df.transpose()))[:target_index, target_index]
+    top_n_indices = np.argsort(-correlations)[:n]
+    top_n_features = df.columns[top_n_indices]
+    top_n_corr = correlations[top_n_indices]
     # ========================
 
     return top_n_features, top_n_corr
@@ -170,7 +181,11 @@ def cv_best_hyperparams(model: BaseEstimator, X, y, k_folds,
     # - You can use MSE or R^2 as a score.
 
     # ====== YOUR CODE: ======
-    raise NotImplementedError()
+    parameter_dict = {'bostonfeaturestransformer__degree': degree_range, 'linearregressor__reg_lambda': lambda_range}
+    grid_search_cv = sklearn.model_selection.GridSearchCV(estimator=model, param_grid=parameter_dict, scoring='r2',
+                                                          cv=k_folds)
+    grid_search_cv.fit(X, y)
+    best_params = grid_search_cv.best_params_
     # ========================
 
     return best_params

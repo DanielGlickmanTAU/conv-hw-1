@@ -51,9 +51,10 @@ class KNNClassifier(object):
             # TODO:
             # - Find indices of k-nearest neighbors of test sample i
             # - Set y_pred[i] to the most common class among them
-
             # ====== YOUR CODE: ======
-            raise NotImplementedError()
+            _, indices = torch.topk(-dist_matrix[i], k=self.k)
+            value = torch.mode(self.y_train[indices]).values.item()
+            y_pred[i] = self.y_train[value]
             # ========================
 
         return y_pred
@@ -80,9 +81,10 @@ class KNNClassifier(object):
         # Hint 1: Open the expression (a-b)^2.
         # Hint 2: Use "Broadcasting Semantics".
 
-        dists = torch.tensor([])
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        x_train_norm = torch.sum(self.x_train * self.x_train, axis=1)
+        x_test_norm = torch.sum(x_test * x_test, axis=1)
+        dists = x_train_norm + (x_test_norm - 2 * (self.x_train @ x_test.T)).T
         # ========================
 
         return dists
@@ -103,7 +105,7 @@ def accuracy(y: Tensor, y_pred: Tensor):
 
     accuracy = None
     # ====== YOUR CODE: ======
-    raise NotImplementedError()
+    accuracy = 1 - torch.sum(y == y_pred) / y.shape[0]
     # ========================
 
     return accuracy
@@ -133,7 +135,18 @@ def find_best_k(ds_train: Dataset, k_choices, num_folds):
         # different split each iteration), or implement something else.
 
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        # Split training dataset to train and val
+        acc = []
+        split = torch.utils.data.random_split(ds_train,lengths=(torch.ones(num_folds,dtype=torch.int) * int(len(ds_train)/num_folds)))
+        val_X, val_y = dataloader_utils.flatten(DataLoader(split[len(split) - 1]))
+
+        # Train and evaluate
+        for index in range(len(split) - 1):
+            train_dl = DataLoader(split[index])
+            model.train(train_dl)
+            y_pred = model.predict(val_X)
+            acc.append(accuracy(val_y,y_pred))
+        accuracies.append(acc)
         # ========================
 
     best_k_idx = np.argmax([np.mean(acc) for acc in accuracies])
