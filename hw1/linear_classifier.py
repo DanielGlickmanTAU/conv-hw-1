@@ -145,7 +145,8 @@ class LinearClassifier(object):
         # The output shape should be (n_classes, C, H, W).
 
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        w_images = self.weights[:-1, :] if has_bias else self.weights
+        w_images = w_images.view(-1, *img_shape)
         # ========================
 
         return w_images
