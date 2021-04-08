@@ -11,7 +11,17 @@ math (delimited with $$).
 part2_q1 = r"""
 **Your answer: Increasing the value of k will not necessarily increase the accuracy. 
 Let's look at the output graph above. The best accuracy is achieved at k=15. But when k=50
-the accuracy decreases**
+the accuracy decreases. 
+
+As it can be seen in the graph, we would like k to be somewhere in the middle for possibly
+the following reasons:
+- We would not want k to be "too small" since we might have some examples whose closest
+neighbours are the wrong classes, so increasing a bit k might generalize better
+
+- On the other hand, increasing k too much might be bad for generalization for example if we chose
+k to be larger than the number of examples of a specific category, we might find other categories 
+to be closer, and thus mislabel such unseen examples.
+**
 """
 # ==============
 
@@ -55,17 +65,27 @@ part3_q3 = r"""
 # Part 4 answers
 
 part4_q1 = r"""
-** **
+** Ideally we would like the residiual plot to be centered around y=0 line. If it's exactly on the y=0
+line then that means we have estimated precisely for that specific data point. Clearly, to have data points on this
+line is unlikely, but the ideal situation would be for the data points to be as close as possible to y=0 line.
+Furthermore, we would like the dotted lines to be closer to zero. In the plot we can see that our model, with the
+chosen parameters generalized well.
 
 """
 
 part4_q2 = r"""
 **Your answer:**
-1.
+1. The use of np.logspace might be to do the grid search on the regularization paramater on a wider range.
 
 
 
-2. 
+2. The number of times the model was fitted is:
+
+        |degree_range| x |lambda_range| x k 
+
+    Where k is the k-fold parameter.  The reason for that is we try each possible
+    combination of degree and lambda, and since we train each model k times we get
+    the expression above.
 """
 
 # ==============
